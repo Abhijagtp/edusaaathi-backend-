@@ -4,11 +4,9 @@ from .models import Course, IndianCity, Lead, ContactMessage, FAQ
 
 class CourseDropdownSerializer(serializers.ModelSerializer):
     """Clean representation of courses for frontend dynamic dropdowns."""
-    name = serializers.CharField(source='title')
-
     class Meta:
         model = Course
-        fields = ['id', 'title', 'name', 'slug', 'category', 'duration']
+        fields = ['id', 'name', 'slug', 'category', 'duration']
 
 
 class IndianCitySerializer(serializers.ModelSerializer):
@@ -96,10 +94,10 @@ class StudentFormSubmissionSerializer(serializers.Serializer):
                 final_course_title = f"Other: {other_input}" if other_input else "Other Course"
             else:
                 course_match = Course.objects.filter(slug__iexact=course_input).first() or \
-                               Course.objects.filter(title__iexact=course_input).first()
+                               Course.objects.filter(name__iexact=course_input).first()
                 if course_match:
                     selected_course_obj = course_match
-                    final_course_title = course_match.title
+                    final_course_title = course_match.name
                 else:
                     final_course_title = course_input
         elif other_input:

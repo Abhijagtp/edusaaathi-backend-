@@ -43,8 +43,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'role': self.user.role,
             'is_staff': self.user.is_staff,
             'is_superuser': self.user.is_superuser,
-            'date_joined': self.user.date_joined,
+            'date_joined': self.user.date_joined.isoformat() if hasattr(self.user.date_joined, 'isoformat') else str(self.user.date_joined),
         }
+        if hasattr(self.user, 'consultant_profile') and self.user.consultant_profile:
+            data['user']['consultant_id'] = self.user.consultant_profile.id
+            data['user']['referral_code'] = self.user.consultant_profile.referral_code
         return data
 
 
