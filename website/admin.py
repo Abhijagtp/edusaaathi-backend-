@@ -8,6 +8,7 @@ class CourseAdmin(admin.ModelAdmin):
     search_fields = ('name', 'slug', 'short_description', 'description')
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ('published', 'is_featured')
+    exclude = ('image', 'image_alt')
 
 @admin.register(IndianCity)
 class IndianCityAdmin(admin.ModelAdmin):
