@@ -207,9 +207,12 @@ class ConsultantDashboardView(APIView):
 
         from website.models import Lead
         from website.serializers import LeadSerializer
+        from django.db.models import Q
 
         if consultant:
-            leads_qs = Lead.objects.filter(assigned_consultant=user)
+            leads_qs = Lead.objects.filter(
+                Q(assigned_consultant=user) | Q(referral_code__iexact=consultant.referral_code)
+            ).distinct()
             referral_code = consultant.referral_code
             referral_link = consultant.get_referral_link(request)
             agency_name = consultant.agency_name
@@ -266,9 +269,15 @@ class ConsultantLeadViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         from website.models import Lead
+        from django.db.models import Q
         user = self.request.user
         if user.is_staff or user.is_superuser or user.role == 'ADMIN':
             return Lead.objects.all().order_by('-created_at')
+        consultant = getattr(user, 'consultant_profile', None)
+        if consultant and consultant.referral_code:
+            return Lead.objects.filter(
+                Q(assigned_consultant=user) | Q(referral_code__iexact=consultant.referral_code)
+            ).distinct().order_by('-created_at')
         return Lead.objects.filter(assigned_consultant=user).order_by('-created_at')
 
     def partial_update(self, request, *args, **kwargs):

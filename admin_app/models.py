@@ -164,12 +164,26 @@ class Consultant(models.Model):
 
     @property
     def total_leads(self):
-        return self.user.assigned_leads.count()
+        from website.models import Lead
+        from django.db.models import Q
+        return Lead.objects.filter(
+            Q(assigned_consultant=self.user) | Q(referral_code__iexact=self.referral_code)
+        ).distinct().count()
 
     @property
     def new_leads(self):
-        return self.user.assigned_leads.filter(status='NEW').count()
+        from website.models import Lead
+        from django.db.models import Q
+        return Lead.objects.filter(
+            Q(assigned_consultant=self.user) | Q(referral_code__iexact=self.referral_code),
+            status='NEW'
+        ).distinct().count()
 
     @property
     def enrolled_leads(self):
-        return self.user.assigned_leads.filter(status='ENROLLED').count()
+        from website.models import Lead
+        from django.db.models import Q
+        return Lead.objects.filter(
+            Q(assigned_consultant=self.user) | Q(referral_code__iexact=self.referral_code),
+            status='ENROLLED'
+        ).distinct().count()

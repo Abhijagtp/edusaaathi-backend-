@@ -148,17 +148,17 @@ class StudentFormSubmissionSerializer(serializers.Serializer):
                 ref_input = consultant.referral_code
                 source_label = f"Referral: {consultant.user.get_full_name} ({consultant.referral_code})"
 
-        # If no referral code was provided, apply Round-Robin lead assignment to active consultants
-        if not consultant_user:
+        if consultant_user:
+            # Explicit consultant referral: assigned directly to referring consultant
+            attrs['resolved_consultant'] = consultant_user
+            attrs['resolved_referral_code'] = ref_input
+            attrs['resolved_source'] = source_label
+        else:
+            # General website enquiry: assigned via Round-Robin across active consultants
             from admin_app.lead_assignment import get_next_round_robin_consultant
-            round_robin_user = get_next_round_robin_consultant()
-            if round_robin_user:
-                consultant_user = round_robin_user
-                source_label = 'Website Student Form'
-
-        attrs['resolved_consultant'] = consultant_user
-        attrs['resolved_referral_code'] = ref_input if ref_input else None
-        attrs['resolved_source'] = source_label
+            attrs['resolved_consultant'] = get_next_round_robin_consultant()
+            attrs['resolved_referral_code'] = None
+            attrs['resolved_source'] = 'Website Student Form'
 
         return attrs
 
