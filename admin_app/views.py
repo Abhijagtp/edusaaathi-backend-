@@ -236,6 +236,7 @@ class ConsultantDashboardView(APIView):
             'success': True,
             'consultant': {
                 'id': consultant.id if consultant else user.id,
+                'user_id': user.id,
                 'full_name': user.get_full_name,
                 'email': user.email,
                 'phone_number': user.phone_number,
