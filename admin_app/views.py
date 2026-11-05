@@ -105,7 +105,7 @@ class AdminDashboardStatsView(APIView):
                 'total_contact_messages': ContactMessage.objects.count(),
                 'unread_contact_messages': ContactMessage.objects.filter(is_read=False).count(),
                 'total_courses': Course.objects.count(),
-                'active_courses': Course.objects.filter(is_active=True).count(),
+                'active_courses': Course.objects.filter(published=True).count(),
             }
         except Exception:
             website_stats = {

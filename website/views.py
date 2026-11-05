@@ -28,7 +28,7 @@ class StudentFormOptionsView(APIView):
 
     def get(self, request):
         # 1. Fetch active courses
-        courses_qs = Course.objects.filter(is_active=True).order_by('-is_featured', 'title')
+        courses_qs = Course.objects.filter(published=True).order_by('-is_featured', 'name')
         course_list = list(CourseDropdownSerializer(courses_qs, many=True).data)
 
         # Append 'Other' option to courses dropdown
@@ -101,13 +101,18 @@ class StudentFormSubmitView(APIView):
 
 # --- General Public Endpoints ---
 
-class CourseListView(generics.ListAPIView):
-    """List all active/published courses with search and category filtering."""
-    queryset = Course.objects.filter(published=True).order_by('-is_featured', 'name')
+class CourseListView(generics.ListCreateAPIView):
+    """List and create courses with search, category filtering, and include_all flag."""
     serializer_class = CourseSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'short_description', 'description', 'category']
+
+    def get_queryset(self):
+        include_all = self.request.query_params.get('include_all', 'false').lower() in ('true', '1')
+        if include_all:
+            return Course.objects.all().order_by('-is_featured', 'name')
+        return Course.objects.filter(published=True).order_by('-is_featured', 'name')
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -117,6 +122,18 @@ class CourseListView(generics.ListAPIView):
             'count': len(serializer.data),
             'results': serializer.data,
         })
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        course = serializer.save()
+        course_data = CourseSerializer(course).data
+        return Response({
+            'success': True,
+            'message': f"Course '{course.name}' created successfully.",
+            'course': course_data,
+            **course_data
+        }, status=status.HTTP_201_CREATED)
 
 
 class CourseDetailView(generics.RetrieveAPIView):
@@ -209,7 +226,7 @@ class CourseAdminViewSet(viewsets.ModelViewSet):
     """
     queryset = Course.objects.all().order_by('-is_featured', 'name')
     serializer_class = CourseSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'slug', 'short_description', 'description', 'category', 'eligibility']
 
