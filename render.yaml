@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: edusaathi-backend
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "True"
+      - key: SUPERUSER_EMAIL
+        value: edusaathi@gmail.com
+      - key: SUPERUSER_PASSWORD
+        value: edusaathi9897@!
